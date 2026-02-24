@@ -50,17 +50,5 @@ Incluye **niveles**, **obstáculos**, **pausa**, **reinicio**, **música**, **so
 - localStorage — High Score con la clave `snake2d_highscore`.
 
 ---
-
-## 📁 Estructura del proyecto
-
-```txt
-project/
-├─ index.html
-├─ css/
-│  └─ styles.css
-├─ js/
-│  └─ main.js
-└─ assets/
-   ├─ consola-de-juego.png
    ├─ bgm.mpeg
    └─ gameover.mp3
