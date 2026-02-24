@@ -1,11 +1,10 @@
 // ============================================================================
 // main.js — Snake 2D (Neon Tech + Start Screen) — SIN IMÁGENES (Canvas Neon)
 // ----------------------------------------------------------------------------
-// Dibujado 100% en Canvas 2D:
-//  - Serpiente: tubo neón con esquinas suaves (rounded stroke) + cabeza con ojos
-//  - Manzana: círculo neón + hoja/tallo
-//  - Cuadrícula completa y nítida (HiDPI) + ajuste responsivo (hasta 600)
-// Mantiene: niveles, obstáculos, start screen, overlay, HUD.
+// + EXTRA:
+//   - Música mientras juegas (bgm)
+//   - SFX cuando pierdes (game over)
+//   - Guardar y mostrar puntuación más alta (localStorage)
 // ============================================================================
 
 // ---------------------- Configuración general ----------------------
@@ -25,6 +24,7 @@ const tint = document.getElementById('tint');
 const tctx = tint.getContext('2d');
 
 const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('highScore');
 const levelEl = document.getElementById('level');
 const speedEl = document.getElementById('speed');
 const foodTimerEl = document.getElementById('foodTimer');
@@ -42,6 +42,60 @@ const startScreen = document.getElementById('startScreen');
 const btnPlay = document.getElementById('btnPlay');
 const btnHow = document.getElementById('btnHow');
 
+// Audios (deben existir en el HTML)
+const bgm = document.getElementById('bgm');
+const sfxGameOver = document.getElementById('sfxGameOver');
+
+// ---------------------- High Score (localStorage) ----------------------
+const HS_KEY = 'snake2d_highscore';
+
+function getHighScore() {
+  return Number(localStorage.getItem(HS_KEY) || 0);
+}
+function setHighScore(val) {
+  localStorage.setItem(HS_KEY, String(val));
+}
+function updateHighScore() {
+  if (!highScoreEl) return;
+  highScoreEl.textContent = String(getHighScore());
+}
+function tryUpdateHighScore() {
+  const hs = getHighScore();
+  if (state && state.score > hs) {
+    setHighScore(state.score);
+    updateHighScore();
+  }
+}
+
+// ---------------------- Audio helpers ----------------------
+// Nota: Muchos navegadores requieren interacción del usuario para iniciar audio.
+async function playBgm() {
+  if (!bgm) return;
+  try {
+    bgm.volume = 0.35;
+    await bgm.play();
+  } catch {
+    // Autoplay bloqueado: se reintenta al presionar JUGAR o al despausar
+  }
+}
+function pauseBgm() {
+  if (!bgm) return;
+  bgm.pause();
+}
+function stopBgm() {
+  if (!bgm) return;
+  bgm.pause();
+  bgm.currentTime = 0;
+}
+function playGameOverSfx() {
+  if (!sfxGameOver) return;
+  try {
+    sfxGameOver.currentTime = 0;
+    sfxGameOver.volume = 0.9;
+    sfxGameOver.play();
+  } catch {}
+}
+
 // ---------------------- Estado ----------------------
 let state = null;
 let lastTime = 0;
@@ -49,8 +103,6 @@ let accumulator = 0;
 
 // ---------------------- Canvas sizing (HiDPI + responsivo) ----------------------
 function getCssBoardSize() {
-  // Toma el tamaño visible real del canvas (CSS)
-  // Si por responsivo baja de 600, esto lo detecta.
   const rect = canvas.getBoundingClientRect();
   const size = Math.max(260, Math.min(BASE_SIZE, Math.floor(rect.width || BASE_SIZE)));
   return size;
@@ -74,7 +126,7 @@ function setupCanvasHiDPI() {
   tint.height = Math.round(cssSize * dpr);
   tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  state.boardPx = cssSize; // tablero lógico en px (para dibujar)
+  state.boardPx = cssSize;
 }
 
 function cellPx() {
@@ -137,6 +189,8 @@ function updateHUD() {
   const cps = SPEEDS[Math.min(state.level - 1, SPEEDS.length - 1)];
   speedEl.textContent = String(cps);
   foodTimerEl.textContent = String(Math.ceil(state.foodTimer));
+
+  updateHighScore();
 }
 
 // ---------------------- Start Screen helpers ----------------------
@@ -171,39 +225,37 @@ function newGame() {
   state.obstacles = buildObstacles(state.level);
   placeFood();
   updateHUD();
+  updateHighScore();
   drawTint();
   hideOverlay();
+
+  // En la pantalla de inicio dejamos la música detenida
+  stopBgm();
 }
 
 // ---------------------- Movimiento ----------------------
 function step() {
-  // Evitar reversa inmediata
   const nd = state.nextDir;
   if (!(nd.x === -state.dir.x && nd.y === -state.dir.y)) state.dir = nd;
 
   const head = state.snake[0];
   const nx = head.x + state.dir.x, ny = head.y + state.dir.y;
 
-  // Paredes
   if (nx < 0 || ny < 0 || nx >= GRID || ny >= GRID) return gameOver();
   const newHead = { x: nx, y: ny };
 
-  // Obstáculos o cuerpo
   if (cellInObstacles(newHead) || state.snake.some((s) => cellsEqual(s, newHead))) return gameOver();
 
-  // Avanzar
   state.snake.unshift(newHead);
 
-  // Comer
   if (cellsEqual(newHead, state.food)) {
     state.score += 10;
-    state.grow += GROW_PER_FOOD;
+    state.grow += 1;
     levelUpIfNeeded();
     placeFood();
     updateHUD();
   }
 
-  // Crecer o mover cola
   if (state.grow > 0) state.grow--;
   else state.snake.pop();
 }
@@ -212,13 +264,26 @@ function step() {
 function gameOver() {
   state.playing = false;
   state.over = true;
-  showOverlay('¡Game Over!', `Puntaje: <b>${state.score}</b><br/>Presiona <b>R</b> para reiniciar.`, 'Reiniciar');
+
+  pauseBgm();
+  playGameOverSfx();
+  tryUpdateHighScore();
+
+  showOverlay(
+    '¡Game Over!',
+    `Puntaje: <b>${state.score}</b><br/>Máxima: <b>${getHighScore()}</b><br/>Presiona <b>R</b> para reiniciar.`,
+    'Reiniciar'
+  );
 }
 
 function togglePause(force) {
   if (state.over) return;
   const willPause = typeof force === 'boolean' ? force : !state.paused;
   state.paused = willPause;
+
+  if (willPause) pauseBgm();
+  else playBgm();
+
   willPause
     ? showOverlay('Juego en pausa', 'Presiona <b>P</b> para continuar.', 'Continuar')
     : hideOverlay();
@@ -229,11 +294,9 @@ function drawBackground() {
   const w = state.boardPx, h = state.boardPx;
   const CP = cellPx();
 
-  // Base oscura
   ctx.fillStyle = '#06111b';
   ctx.fillRect(0, 0, w, h);
 
-  // Brillos suaves
   const g1 = ctx.createRadialGradient(w * 0.15, h * 0.15, 20, w * 0.15, h * 0.15, w * 0.9);
   g1.addColorStop(0, 'rgba(124,60,255,0.16)');
   g1.addColorStop(1, 'rgba(124,60,255,0)');
@@ -244,7 +307,6 @@ function drawBackground() {
   g2.addColorStop(1, 'rgba(0,255,179,0)');
   ctx.fillStyle = g2; ctx.fillRect(0, 0, w, h);
 
-  // Grid completo y nítido
   ctx.save();
   ctx.globalAlpha = 0.18;
   ctx.lineWidth = 1;
@@ -260,7 +322,6 @@ function drawBackground() {
   }
   ctx.restore();
 
-  // Borde interno del tablero (para que se vea el límite)
   ctx.save();
   ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 2;
@@ -274,7 +335,6 @@ function neonStrokePath(drawPathFn, glowColor, coreColor, glowW, coreW, glowAlph
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
-  // glow
   ctx.globalAlpha = glowAlpha;
   ctx.strokeStyle = glowColor;
   ctx.shadowColor = glowColor;
@@ -282,7 +342,6 @@ function neonStrokePath(drawPathFn, glowColor, coreColor, glowW, coreW, glowAlph
   ctx.lineWidth = glowW;
   ctx.beginPath(); drawPathFn(); ctx.stroke();
 
-  // core
   ctx.globalAlpha = 1;
   ctx.shadowBlur = coreW * 0.9;
   ctx.strokeStyle = coreColor;
@@ -296,7 +355,6 @@ function neonStrokePath(drawPathFn, glowColor, coreColor, glowW, coreW, glowAlph
 function neonFillCircle(x, y, r, glowColor, coreColor) {
   ctx.save();
 
-  // glow outer
   ctx.globalAlpha = 0.9;
   ctx.fillStyle = glowColor;
   ctx.shadowColor = glowColor;
@@ -305,7 +363,6 @@ function neonFillCircle(x, y, r, glowColor, coreColor) {
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // core
   ctx.globalAlpha = 1;
   ctx.fillStyle = coreColor;
   ctx.shadowColor = coreColor;
@@ -345,10 +402,8 @@ function drawApple() {
   const CP = cellPx();
   const { cx, cy } = cellCenter(state.food);
 
-  // cuerpo
   neonFillCircle(cx, cy + 1, CP * 0.28, 'rgba(255,0,102,0.55)', 'rgba(255,72,140,0.92)');
 
-  // highlight
   ctx.save();
   ctx.globalAlpha = 0.55;
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -357,7 +412,6 @@ function drawApple() {
   ctx.fill();
   ctx.restore();
 
-  // tallo
   ctx.save();
   ctx.lineCap = 'round';
   ctx.shadowColor = 'rgba(255,200,0,0.55)';
@@ -370,7 +424,6 @@ function drawApple() {
   ctx.stroke();
   ctx.restore();
 
-  // hoja
   ctx.save();
   ctx.shadowColor = 'rgba(0,255,179,0.7)';
   ctx.shadowBlur = 12;
@@ -408,7 +461,6 @@ function drawSnake() {
     0.9
   );
 
-  // línea interior (highlight)
   ctx.save();
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -420,7 +472,6 @@ function drawSnake() {
   ctx.beginPath(); drawPath(); ctx.stroke();
   ctx.restore();
 
-  // cabeza
   const head = pts[0];
   drawHead(head.cx, head.cy, CP);
 }
@@ -428,7 +479,6 @@ function drawSnake() {
 function drawHead(cx, cy, CP) {
   neonFillCircle(cx, cy, CP * 0.38, 'rgba(124,60,255,0.55)', 'rgba(124,60,255,0.92)');
 
-  // dirección para ojos
   const d = state.dir;
   const px = -d.y, py = d.x;
 
@@ -439,7 +489,6 @@ function drawHead(cx, cy, CP) {
   const ex2 = cx + d.x * f - px * s;
   const ey2 = cy + d.y * f - py * s;
 
-  // ojos
   ctx.save();
   ctx.shadowColor = 'rgba(255,255,255,0.65)';
   ctx.shadowBlur = 10;
@@ -453,7 +502,6 @@ function drawHead(cx, cy, CP) {
   ctx.beginPath(); ctx.arc(ex2 + d.x * 2, ey2 + d.y * 2, CP * 0.04, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 
-  // brillo frontal
   ctx.save();
   ctx.globalAlpha = 0.55;
   ctx.fillStyle = 'rgba(255,255,255,0.65)';
@@ -472,10 +520,9 @@ function render() {
   drawApple();
   drawSnake();
 
-  // vignette suave
   ctx.save();
   const w = state.boardPx, h = state.boardPx;
-  const vg = ctx.createRadialGradient(w/2, h/2, w*0.25, w/2, h/2, w*0.8);
+  const vg = ctx.createRadialGradient(w / 2, h / 2, w * 0.25, w / 2, h / 2, w * 0.8);
   vg.addColorStop(0, 'rgba(0,0,0,0)');
   vg.addColorStop(1, 'rgba(0,0,0,0.35)');
   ctx.fillStyle = vg;
@@ -495,7 +542,7 @@ function drawTint() {
   tctx.fillStyle = 'rgba(0,255,179,0.28)';
   tctx.shadowColor = 'rgba(0,255,179,0.75)';
   tctx.shadowBlur = 14;
-  tctx.fillText('USE ARROW KEYS / WASD — P: PAUSA — R: REINICIAR', w / 2, h * 0.70);
+  tctx.fillText('', w / 2, h * 0.70);
   tctx.shadowBlur = 0;
 }
 
@@ -526,7 +573,6 @@ function loop(ts) {
 window.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
 
-  // Si aún no inicia, ignorar movimientos (pero permitir R)
   if (!state.started) {
     if (k === 'r') {
       newGame();
@@ -565,11 +611,12 @@ modalBtn.addEventListener('click', () => {
 });
 
 // Start Screen botones
-btnPlay.addEventListener('click', () => {
+btnPlay.addEventListener('click', async () => {
   hideStart();
   state.started = true;
   state.paused = false;
   hideOverlay();
+  await playBgm();
 });
 
 btnHow.addEventListener('click', () => {
@@ -591,7 +638,6 @@ function hideOverlay() { overlay.classList.add('hidden'); }
 
 // ---------------------- Resize (mantener cuadrícula completa) ----------------------
 window.addEventListener('resize', () => {
-  // si el CSS reduce el canvas (móvil), reajustamos y seguimos dibujando bien
   clampBoardSizeOnResize();
 });
 

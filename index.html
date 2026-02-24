@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Víbora WebGL — Niveles y Obstáculos</title>
+
+  <!-- Favicon -->
+ <link rel="icon" type="image/png" sizes="32x32" href="assets/consola-de-juegos.png">
+
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -14,8 +18,8 @@
     <div class="actions">
       <button id="btnPause" title="P">⏸ Pausa</button>
       <button id="btnReset" title="R">🔄 Reiniciar</button>
-     <!-- NUEVO: ir a Pac-Man -->
-  <a class="btnLink" href="pacman/pacman.html" title="Ir a Pac-Man">🟡 PAC-MAN</a>
+      <!-- NUEVO: ir a Pac-Man -->
+      <a class="btnLink" href="pacman/pacman.html" title="Ir a Pac-Man">🟡 PAC-MAN</a>
     </div>
   </header>
 
@@ -30,6 +34,7 @@
       <!-- Estado en vivo (mismos IDs que usa main.js) -->
       <div class="live">
         <div><span class="k">Puntaje:</span> <b id="score">0</b></div>
+        <div><span class="k">Máxima:</span> <b id="highScore">0</b></div>
         <div><span class="k">Nivel:</span> <b id="level">1</b></div>
         <div><span class="k">Velocidad:</span> <b id="speed">8</b>/s</div>
         <div><span class="k">Comida cambia en:</span> <b id="foodTimer">—</b>s</div>
@@ -96,6 +101,10 @@
   <footer class="footer">
     <p>© <span id="year"></span> — Videojuego desarrollado por <b>David Fidel Guzman Sanchez</b></p>
   </footer>
+
+  <!-- Audios -->
+  <audio id="bgm" src="assets/bgm.mpeg" loop preload="auto"></audio>
+  <audio id="sfxGameOver" src="assets/gameover.mp3" preload="auto"></audio>
 
   <script>
     // Solo para el año del footer

@@ -1,12 +1,16 @@
 // ============================================================================
 // pacman.js — Pac-Man Canvas (look clásico tipo arcade + salida de fantasmas)
-// Ajuste pedido: usar canvas fijo 680x600 (sin resize responsivo)
+// + EXTRA:
+//   - Música mientras juegas (bgm)
+//   - SFX: perder vida / comer punto / comer pellet
+//   - Guardar y mostrar puntuación más alta (localStorage)
 // ============================================================================
 
 const canvas = document.getElementById("pac");
 const ctx = canvas.getContext("2d");
 
 const scoreEl = document.getElementById("score");
+const highScoreEl = document.getElementById("highScore");
 const livesEl = document.getElementById("lives");
 const statusEl = document.getElementById("status");
 
@@ -17,6 +21,61 @@ const modalBtn = document.getElementById("modalBtn");
 
 const btnPause = document.getElementById("btnPause");
 const btnReset = document.getElementById("btnReset");
+
+// Audios (deben existir en el HTML)
+const bgm = document.getElementById("bgm");
+const sfxLose = document.getElementById("sfxLose");
+const sfxEatDot = document.getElementById("sfxEatDot");
+const sfxEatPellet = document.getElementById("sfxEatPellet");
+
+// --------- High Score (localStorage) ---------
+const HS_KEY = "pacman2d_highscore";
+
+function getHighScore() {
+  return Number(localStorage.getItem(HS_KEY) || 0);
+}
+function setHighScore(val) {
+  localStorage.setItem(HS_KEY, String(val));
+}
+function updateHighScoreUI() {
+  if (!highScoreEl) return;
+  highScoreEl.textContent = String(getHighScore());
+}
+function tryUpdateHighScore() {
+  const hs = getHighScore();
+  if (state && state.score > hs) {
+    setHighScore(state.score);
+    updateHighScoreUI();
+  }
+}
+
+// --------- Audio helpers ---------
+async function playBgm() {
+  if (!bgm) return;
+  try {
+    bgm.volume = 0.35;
+    await bgm.play();
+  } catch {
+    // autoplay bloqueado: se reintenta con interacción
+  }
+}
+function pauseBgm() {
+  if (!bgm) return;
+  bgm.pause();
+}
+function stopBgm() {
+  if (!bgm) return;
+  bgm.pause();
+  bgm.currentTime = 0;
+}
+function playSfx(el, volume = 0.9) {
+  if (!el) return;
+  try {
+    el.currentTime = 0;
+    el.volume = volume;
+    el.play();
+  } catch {}
+}
 
 // --------- Maze (28x31) ---------
 const MAZE_W = 28;
@@ -84,7 +143,6 @@ function newGame() {
     paused: false,
     over: false,
 
-    // Pac-Man inicia en esquina (abajo-izquierda) y NO se mueve hasta input
     pac: {
       x: 1,
       y: MAZE_H - 2,
@@ -94,7 +152,6 @@ function newGame() {
       started: false
     },
 
-    // compuerta fantasmas
     ghostGateOpen: false,
     ghostGateTimer: 4.0,
 
@@ -109,13 +166,16 @@ function newGame() {
     acc: 0,
     stepTime: 1 / 10,
 
-    // Tamaño fijo del tablero: se ajusta al <canvas width height>
-    boardW: canvas.width,   // 680
-    boardH: canvas.height   // 600
+    boardW: canvas.width,
+    boardH: canvas.height
   };
 
   hideOverlay();
   updateHUD("Listo");
+  updateHighScoreUI();
+
+  // En “Listo” dejamos música detenida (se inicia con la primera tecla)
+  stopBgm();
 }
 
 function updateHUD(statusText) {
@@ -124,6 +184,8 @@ function updateHUD(statusText) {
   statusEl.textContent =
     statusText ??
     (state.over ? "Game Over" : state.paused ? "Pausa" : "Jugando");
+
+  updateHighScoreUI();
 }
 
 function showOverlay(title, html, btnText) {
@@ -140,6 +202,10 @@ function togglePause(force) {
   if (state.over) return;
   const will = typeof force === "boolean" ? force : !state.paused;
   state.paused = will;
+
+  if (will) pauseBgm();
+  else playBgm();
+
   updateHUD(will ? "Pausa" : "Jugando");
   will
     ? showOverlay("Juego en pausa", "Presiona <b>P</b> para continuar.", "Continuar")
@@ -149,9 +215,6 @@ function togglePause(force) {
 // --------- Tamaños por celda (tablero NO es cuadrado) ---------
 function cellPxX() { return state.boardW / MAZE_W; }
 function cellPxY() { return state.boardH / MAZE_H; }
-
-// Para que todo se vea uniforme, usamos el menor de ambos para radios/lineWidth,
-// pero posicionamos con X/Y reales.
 function cellUnit() { return Math.min(cellPxX(), cellPxY()); }
 
 // --------- Helpers ---------
@@ -194,9 +257,13 @@ function stepPac() {
   if (tile === 2) {
     state.grid[ny][nx] = 0;
     state.score += 10;
+    playSfx(sfxEatDot, 0.35);
+    tryUpdateHighScore();
   } else if (tile === 3) {
     state.grid[ny][nx] = 0;
     state.score += 50;
+    playSfx(sfxEatPellet, 0.55);
+    tryUpdateHighScore();
     for (const g of state.ghosts) g.scared = 6.0;
   }
 }
@@ -257,9 +324,11 @@ function handleCollisions() {
     if (g.x === state.pac.x && g.y === state.pac.y) {
       if (g.scared > 0) {
         state.score += 200;
+        tryUpdateHighScore();
         g.x = 13; g.y = 14; g.dir = { x: 0, y: -1 }; g.scared = 0;
       } else {
         state.lives -= 1;
+        playSfx(sfxLose, 0.9);
         if (state.lives <= 0) gameOver();
         else {
           state.pac.x = 1; state.pac.y = MAZE_H - 2;
@@ -277,6 +346,7 @@ function handleCollisions() {
           state.ghostGateTimer = 4.0;
 
           updateHUD("¡Perdiste una vida!");
+          pauseBgm();
         }
       }
       break;
@@ -295,14 +365,18 @@ function remainingDots() {
 function winCheck() {
   if (remainingDots() === 0) {
     state.over = true;
-    showOverlay("¡Ganaste!", `Puntaje: <b>${state.score}</b><br/>Presiona <b>R</b> para reiniciar.`, "Reiniciar");
+    pauseBgm();
+    tryUpdateHighScore();
+    showOverlay("¡Ganaste!", `Puntaje: <b>${state.score}</b><br/>Máxima: <b>${getHighScore()}</b><br/>Presiona <b>R</b> para reiniciar.`, "Reiniciar");
     updateHUD("Victoria");
   }
 }
 
 function gameOver() {
   state.over = true;
-  showOverlay("¡Game Over!", `Puntaje: <b>${state.score}</b><br/>Presiona <b>R</b> para reiniciar.`, "Reiniciar");
+  pauseBgm();
+  tryUpdateHighScore();
+  showOverlay("¡Game Over!", `Puntaje: <b>${state.score}</b><br/>Máxima: <b>${getHighScore()}</b><br/>Presiona <b>R</b> para reiniciar.`, "Reiniciar");
   updateHUD("Game Over");
 }
 
@@ -341,7 +415,6 @@ function drawWalls() {
     roundRectStroke(px + 1, py + 1, cx - 2, cy - 2, CU * 0.22);
   }
 
-  // compuerta
   ctx.shadowBlur = 0;
   ctx.lineWidth = Math.max(2.0, CU * 0.10);
   ctx.strokeStyle = state.ghostGateOpen ? "rgba(0,0,0,0)" : "#ff7ad9";
@@ -503,7 +576,7 @@ function loop(ts) {
 }
 
 // --------- Inputs ---------
-window.addEventListener("keydown", (e) => {
+window.addEventListener("keydown", async (e) => {
   const k = e.key.toLowerCase();
 
   if (k === "p") togglePause();
@@ -525,6 +598,7 @@ window.addEventListener("keydown", (e) => {
     if (!isWallPac(nx, ny)) {
       state.pac.started = true;
       state.pac.dir = { ...next };
+      await playBgm(); // empieza música en la primera interacción
     }
   }
 });
@@ -536,6 +610,11 @@ modalBtn.addEventListener("click", () => {
   if (state.over) newGame();
   else togglePause(false);
 });
+
+// También iniciar música si presionan botones (interacción)
+btnPause.addEventListener("click", () => playBgm());
+btnReset.addEventListener("click", () => stopBgm());
+modalBtn.addEventListener("click", () => playBgm());
 
 // --------- Start ---------
 newGame();

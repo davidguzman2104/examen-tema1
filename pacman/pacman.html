@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Pac-Man 2D — Canvas</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/consola-de-juegos.png" />
+
   <link rel="stylesheet" href="css/pacman.css" />
 </head>
 <body>
@@ -25,6 +29,7 @@
     <aside class="sidebar">
       <div class="live">
         <div><span class="k">Puntaje:</span> <b id="score">0</b></div>
+        <div><span class="k">Máxima:</span> <b id="highScore">0</b></div>
         <div><span class="k">Vidas:</span> <b id="lives">3</b></div>
         <div><span class="k">Estado:</span> <b id="status">Listo</b></div>
       </div>
@@ -54,6 +59,10 @@
   <footer class="footer">
     <p>© <span id="year"></span> — Videojuego desarrollado por <b>David Fidel Guzman Sanchez</b></p>
   </footer>
+
+  <!-- Audios -->
+  <audio id="bgm" src="../assets/pacman.mpeg" loop preload="auto"></audio>
+  <audio id="sfxLose" src="../assets/gameover.mp3" preload="auto"></audio>
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
