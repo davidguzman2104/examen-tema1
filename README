@@ -49,4 +49,3 @@ Incluye **niveles**, **obstáculos**, **pausa**, **reinicio**, **música**, **so
 - Responsive + HiDPI — ajuste del canvas con `devicePixelRatio`.
 - localStorage — High Score con la clave `snake2d_highscore`.
 
-
