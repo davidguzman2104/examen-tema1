@@ -1,0 +1,167 @@
+/* pacman.css — Arcade Classic look */
+*{ box-sizing:border-box; }
+
+:root{
+  --bg:#000;
+  --panel: rgba(255,255,255,.08);
+  --ink: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.72);
+
+  --maze:#2a57ff;
+  --mazeGlow: rgba(42,87,255,.55);
+
+  --dot:#f6cbb2;
+  --pac:#ffd400;
+
+  --glass: rgba(255,255,255,.08);
+}
+
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  background: radial-gradient(1000px 800px at 50% 20%, rgba(42,87,255,.15), transparent 55%),
+              radial-gradient(800px 600px at 50% 80%, rgba(255,212,0,.06), transparent 55%),
+              #000;
+  color: var(--ink);
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  min-height:100vh;
+}
+
+.topbar{
+  max-width:980px;
+  width:100%;
+  margin:10px auto 0;
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border-radius:14px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.topbar h1{
+  margin:0;
+  font-size:18px;
+  letter-spacing:2px;
+  opacity:.92;
+}
+
+.actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+button,.btnLink{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  background: rgba(255,255,255,.08);
+  color: var(--ink);
+  border:1px solid rgba(255,255,255,.14);
+  padding:7px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+  box-shadow: 0 10px 26px rgba(0,0,0,.45);
+}
+button:hover,.btnLink:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 14px 32px rgba(0,0,0,.55), 0 0 18px rgba(42,87,255,.25);
+}
+button:active,.btnLink:active{ transform: translateY(0) scale(.99); }
+
+.play-area{
+  max-width:980px;
+  width:100%;
+  margin:10px auto 16px;
+  display:grid;
+  grid-template-columns: 700px minmax(240px, 1fr); /* antes 620 */
+  gap:18px;
+  align-items:start;
+}
+
+.frame{
+  position:relative;
+  width:700px;          /* 680 + padding */
+  height:620px;         /* canvas 600 + padding */
+  border-radius:14px;
+  padding:10px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 18px 60px rgba(0,0,0,.60), 0 0 40px rgba(42,87,255,.10);
+  overflow:hidden;
+}
+
+#pac{
+  width:680px;
+  height:600px;
+  border-radius:10px;
+  display:block;
+  background:#000;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+.sidebar{
+  background: rgba(255,255,255,.06);
+  border-radius:14px;
+  padding:14px;
+  box-shadow: 0 18px 48px rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.live{ display:grid; gap:8px; font-size:14px; }
+.live .k{ color: rgba(255,255,255,.75); margin-right:6px; }
+
+.help-right{ color: rgba(255,255,255,.78); font-size:14px; }
+.help-right h2{ margin:12px 0 8px; font-size:15px; color: rgba(255,255,255,.90); }
+.help-right ul{ margin:0; padding-left:18px; }
+.help-right li{ margin:6px 0; }
+
+hr{ border:0; height:1px; background: rgba(255,255,255,.10); margin:12px 0; }
+
+.overlay.hidden{ display:none; }
+.overlay{
+  position:fixed;
+  inset:0;
+  background: radial-gradient(900px 600px at 50% 30%, rgba(42,87,255,.20), rgba(0,0,0,.70)),
+              rgba(0,0,0,.60);
+  display:grid;
+  place-items:center;
+  z-index:10;
+}
+.modal{
+  background: rgba(0,0,0,.78);
+  padding:20px;
+  border-radius:12px;
+  width: min(480px, 92vw);
+  text-align:center;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 26px 80px rgba(0,0,0,.70);
+}
+.modal h2{ margin-top:0; letter-spacing:1px; }
+.modal p{ color: rgba(255,255,255,.82); }
+
+.footer{
+  width:100%;
+  border-top:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.05);
+  color: rgba(255,255,255,.70);
+  font-size:13px;
+}
+.footer p{
+  max-width:980px;
+  margin:8px auto;
+  padding:10px 14px;
+}
+
+@media (max-width: 980px){
+  .play-area{ grid-template-columns: 1fr; justify-items:center; }
+  .sidebar{ width: min(620px, 92vw); }
+}
+@media (max-width: 700px){
+  .frame{ width: calc(92vw + 20px); height: auto; }
+  #pac{ width:92vw; height: calc(92vw * 1.12); max-width:600px; }
+}

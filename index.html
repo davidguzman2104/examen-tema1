@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Víbora WebGL — Niveles y Obstáculos</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Barra superior: título + acciones bien espaciadas -->
+  <header class="topbar">
+    <h1>SNAKE 2D</h1>
+    <div class="actions">
+      <button id="btnPause" title="P">⏸ Pausa</button>
+      <button id="btnReset" title="R">🔄 Reiniciar</button>
+     <!-- NUEVO: ir a Pac-Man -->
+  <a class="btnLink" href="pacman/pacman.html" title="Ir a Pac-Man">🟡 PAC-MAN</a>
+    </div>
+  </header>
+
+  <!-- Área principal: canvas a la izquierda + instrucciones a la derecha -->
+  <main class="play-area">
+    <div class="frame">
+      <canvas id="game" width="600" height="600"></canvas>
+      <canvas id="tint" class="gridTint" width="600" height="600"></canvas>
+    </div>
+
+    <aside class="sidebar">
+      <!-- Estado en vivo (mismos IDs que usa main.js) -->
+      <div class="live">
+        <div><span class="k">Puntaje:</span> <b id="score">0</b></div>
+        <div><span class="k">Nivel:</span> <b id="level">1</b></div>
+        <div><span class="k">Velocidad:</span> <b id="speed">8</b>/s</div>
+        <div><span class="k">Comida cambia en:</span> <b id="foodTimer">—</b>s</div>
+      </div>
+
+      <hr/>
+
+      <!-- Instrucciones al lado derecho -->
+      <section class="help help-right">
+        <h2>Instrucciones</h2>
+        <ul>
+          <li>Usa <b>← ↑ → ↓</b> o <b>W A S D</b> para moverte.</li>
+          <li>Presiona <b>P</b> para Pausar/Continuar.</li>
+          <li>Presiona <b>R</b> para Reiniciar.</li>
+          <li>Come comida para sumar puntos y subir de nivel.</li>
+          <li>Evita chocar con tu cuerpo, paredes y obstáculos.</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+  <!-- Start Screen (presentación) -->
+  <div id="startScreen" class="overlay">
+    <div class="modal">
+      <h2>🐍 SNAKE 2D — Neon Tech</h2>
+      <p>
+        Come manzanas, sube de nivel y esquiva obstáculos.<br/>
+        ¿Hasta dónde llegas?
+      </p>
+
+      <hr/>
+
+      <section class="help help-right" style="text-align:left">
+        <h2>Instrucciones</h2>
+        <ul>
+          <li>Mover: <b>← ↑ → ↓</b> o <b>W A S D</b></li>
+          <li>Pausa: <b>P</b></li>
+          <li>Reiniciar: <b>R</b></li>
+          <li>Objetivo: comer 🍎 y evitar choques</li>
+        </ul>
+      </section>
+
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+        <button id="btnPlay">▶ JUGAR</button>
+        <button id="btnHow">ℹ Ver controles</button>
+      </div>
+
+      <p style="margin-top:12px; font-size:13px; opacity:.85;">
+        Tip: cada 30 pts subes de nivel y aumenta la velocidad.
+      </p>
+    </div>
+  </div>
+
+  <!-- Overlay (pausa / game over) -->
+  <div id="overlay" class="overlay hidden">
+    <div class="modal">
+      <h2 id="modalTitle">Juego en pausa</h2>
+      <p id="modalText">Presiona <b>P</b> para continuar.</p>
+      <button id="modalBtn">Continuar</button>
+    </div>
+  </div>
+
+  <!-- Footer con créditos -->
+  <footer class="footer">
+    <p>© <span id="year"></span> — Videojuego desarrollado por <b>David Fidel Guzman Sanchez</b></p>
+  </footer>
+
+  <script>
+    // Solo para el año del footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
