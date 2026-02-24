@@ -1,0 +1,40 @@
+# Instituto Tecnológico de Pachuca
+
+**Materia:** DESARROLLO DE SOLUCIONES EN AMBIENTES VIRTUALES  
+**Trabajo:** 1.6 Examen Tema 1. Introducción a las interfaces 3D y experiencia de usuario  
+**Estudiante:** David Fidel Guzmán Sánchez — 21200255  
+**Profesor:** M.C. Víctor Manuel Pinedo Fernández  
+**Fecha:** 23/02/26  
+
+---
+
+# 🐍 Snake 2D — Neon Tech 
+
+Videojuego web estilo **arcade** desarrollado con **HTML + CSS + JavaScript**, renderizado con **Canvas 2D** (sin imágenes para el dibujo del juego).  
+Incluye **niveles**, **obstáculos**, **pausa**, **reinicio**, **música**, **sonidos** y **high score** con `localStorage`.  
+También cuenta con acceso a **Pac-Man** desde la barra superior.
+
+---
+
+## ✅ Características
+
+- 🎮 Snake 2D con estética **Neon Tech**
+- 📈 Subida de **niveles automática** (cada 30 puntos)
+- ⚡ **Velocidad progresiva** por nivel
+- 🧱 **Obstáculos** que aumentan conforme avanzas
+- 🍎 **Comida con temporizador** (cambia de lugar si no se consume)
+- ⏸ Pausa / Continuar (tecla **P** o botón)
+- 🔄 Reiniciar (tecla **R** o botón)
+- 🏆 High Score guardado en `localStorage`
+- 🎵 Música de fondo durante el juego
+
+---
+
+## 🕹️ Controles
+
+- Mover: **← ↑ → ↓** o **W A S D**
+- Pausa / Continuar: **P**
+- Reiniciar: **R**
+
+---
+
