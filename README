@@ -1,0 +1,34 @@
+# 🐍 Snake 2D — Neon Tech (Canvas) + 🟡 Pac-Man
+
+Videojuego web estilo **arcade** desarrollado con **HTML + CSS + JavaScript** usando **Canvas 2D** (sin imágenes para el render del juego).  
+Incluye sistema de **niveles**, **obstáculos**, **pausa**, **reinicio**, **música**, **sonidos** y **high score** con `localStorage`.  
+Además, cuenta con un acceso directo a **Pac-Man** desde la barra superior.
+
+---
+
+## ✅ Características
+
+- 🎮 **Snake 2D** con estética **Neon Tech**
+- 📈 **Niveles automáticos** (cada 30 puntos subes de nivel)
+- ⚡ **Velocidad progresiva** por nivel
+- 🧱 **Obstáculos** que aumentan conforme subes de nivel
+- 🍎 **Comida con temporizador** (cambia de posición si no la comes)
+- ⏸ **Pausa / Continuar** (tecla **P** o botón)
+- 🔄 **Reiniciar** (tecla **R** o botón)
+- 🏆 **High Score** guardado en `localStorage`
+- 🎵 **Música de fondo** mientras juegas
+- 🔊 **SFX de Game Over**
+- 🟡 Link a **Pac-Man** desde el menú
+- 🧩 Diseño con **Bootstrap (solo CSS)** aplicado a títulos/botones sin afectar la lógica
+
+---
+
+## 🕹️ Controles
+
+- Mover: **← ↑ → ↓** o **W A S D**
+- Pausa / Continuar: **P**
+- Reiniciar: **R**
+
+---
+
+## 📁 Estructura del proyecto (ejemplo)
